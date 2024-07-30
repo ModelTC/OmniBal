@@ -5,6 +5,7 @@ import json
 from torch.utils.data import Dataset
 import numpy as np
 
+
 def get_token_sum(g):
     sum = 0
     for i in g:
@@ -55,7 +56,8 @@ class MegatronPretrainingRandomSampler:
         assert current_epoch_samples % self.micro_batch_times_data_parallel_size == 0
 
         # data sharding and random sampling
-        bucket_size = (self.total_samples // self.micro_batch_times_data_parallel_size) * self.micro_batch_size
+        bucket_size = (self.total_samples //
+                       self.micro_batch_times_data_parallel_size) * self.micro_batch_size
         bucket_offset = current_epoch_samples // self.data_parallel_size
         start_idx = self.data_parallel_rank * bucket_size
 
@@ -104,7 +106,8 @@ class MegatronLengthGroupSampler:
             '{}'.format(self.data_parallel_rank, data_parallel_size)
 
         self.lengths = lengths
-        self.num_samples = math.ceil(len(self.lengths) / (data_parallel_size * self.micro_batch_size))
+        self.num_samples = math.ceil(
+            len(self.lengths) / (data_parallel_size * self.micro_batch_size))
         self.total_size = self.num_samples * data_parallel_size * self.micro_batch_size
         self.seed = seed
         self.buffer = None
@@ -135,12 +138,14 @@ class MegatronLengthGroupSampler:
         # We need to use torch for the random part as a distributed sampler will set the random seed for torch.
         indices = torch.randperm(len(lengths), generator=generator)
         megabatch_size = world_size * batch_size
-        megabatches = [indices[i: i + megabatch_size].tolist() for i in range(0, len(lengths), megabatch_size)]
-        megabatches = [sorted(megabatch, key=lambda i: lengths[i], reverse=True) for megabatch in megabatches]
-        megabatches = [self.split_to_even_chunks(megabatch, lengths, world_size) for megabatch in megabatches]
+        megabatches = [indices[i: i + megabatch_size].tolist()
+                       for i in range(0, len(lengths), megabatch_size)]
+        megabatches = [sorted(megabatch, key=lambda i: lengths[i],
+                              reverse=True) for megabatch in megabatches]
+        megabatches = [self.split_to_even_chunks(
+            megabatch, lengths, world_size) for megabatch in megabatches]
 
         return [i for megabatch in megabatches for batch in megabatch for i in batch]
-    
 
     def __len__(self):
         return self.total_samples
@@ -149,7 +154,8 @@ class MegatronLengthGroupSampler:
         if self.buffer is None:
             g = torch.Generator()
             g.manual_seed(self.seed)
-            indices = self.get_length_grouped_indices(self.lengths, self.micro_batch_size, self.data_parallel_size, generator=g)
+            indices = self.get_length_grouped_indices(
+                self.lengths, self.micro_batch_size, self.data_parallel_size, generator=g)
             self.buffer = indices
         else:
             indices = self.buffer
@@ -204,7 +210,7 @@ class BalancedDataset(Dataset):
             vit_packed_thresh = vit_packed_length
         if init:
             if fast_group:
-                from fast_packed import fast_random_group
+                from fast_isf import fast_random_group
                 self.pack_group = fast_random_group.fast_process_random_groups(self.token_lengths,
                                                                                self.seed,
                                                                                vit_packed_thresh,
@@ -213,8 +219,10 @@ class BalancedDataset(Dataset):
                                                                                max_seq_length,
                                                                                iter_time=iter_time)
             else:
-                self.pack_group = self.iter_random_groups(self.token_lengths, iter_time=iter_time)
-            print(json.dumps(self.collect_packed_info(self.pack_group), indent=4, sort_keys=True))
+                self.pack_group = self.iter_random_groups(
+                    self.token_lengths, iter_time=iter_time)
+            print(json.dumps(self.collect_packed_info(
+                self.pack_group), indent=4, sort_keys=True))
             lengths = []
             for g in self.pack_group:
                 temp = 0
@@ -251,7 +259,7 @@ class BalancedDataset(Dataset):
         info['vit_length_mean'] = np.mean(all_vit_length)
         info['vit_length_var'] = np.var(all_vit_length)
         info['vit_length_std'] = np.std(all_vit_length)
-        
+
         info['llm_length_mean'] = np.mean(all_llm_length)
         info['llm_length_var'] = np.var(all_llm_length)
         info['llm_length_std'] = np.std(all_llm_length)
@@ -274,7 +282,8 @@ class BalancedDataset(Dataset):
                     with open(token_length_path, "r") as f:
                         token_length = json.load(f)
                     for item in token_length:
-                        token_lengths.append([idx, item['vit_num'], item['token_num']])
+                        token_lengths.append(
+                            [idx, item['vit_num'], item['token_num']])
                         idx += 1
         self.token_lengths = token_lengths
 
@@ -290,7 +299,8 @@ class BalancedDataset(Dataset):
         vit_token_length_sum, llm_token_length_sum = 0, 0
         each_group = []
         for idx, sample_id in enumerate(index):
-            vit_sample_length, llm_sample_length = token_lengths[sample_id][1], token_lengths[sample_id][2]
+            vit_sample_length, llm_sample_length = token_lengths[
+                sample_id][1], token_lengths[sample_id][2]
             if vit_sample_length > self.vit_packed_length or llm_sample_length > self.llm_packed_length:
                 continue
             vit_token_length_sum += vit_sample_length
@@ -369,7 +379,7 @@ class BalancedDataset(Dataset):
         info_dict['ave_bs'] = sample_num / float(len(packed_groups))
         self.info_dict = info_dict
         return info_dict
-    
+
     def __getitem__(self, idx):
         groups = self.pack_group[idx]
         vit_num = 0
@@ -384,6 +394,7 @@ class BalancedDataset(Dataset):
         Returns dataset length
         """
         return len(self.pack_group)
+
 
 class BaseDataset(Dataset):
     def __init__(self,
@@ -447,6 +458,7 @@ class BatchCollector(object):
             vit_num=vit_num
         )
 
+
 def get_pad_dist_ratio(dataset, sampler_type='random', dp_size=16, micro_bs=4):
     random_pad_token = 0
     random_all_token = 0
@@ -457,9 +469,11 @@ def get_pad_dist_ratio(dataset, sampler_type='random', dp_size=16, micro_bs=4):
     for rank in range(dp_size):
         print("random rank", rank)
         if sampler_type == 'random':
-            batch_sampler = MegatronPretrainingRandomSampler(len(dataset), 0, micro_bs, rank, dp_size)
+            batch_sampler = MegatronPretrainingRandomSampler(
+                len(dataset), 0, micro_bs, rank, dp_size)
         if sampler_type == 'length_group':
-            batch_sampler = MegatronLengthGroupSampler(len(dataset), 0, micro_bs, rank, dp_size, lengths=dataset.lengths)
+            batch_sampler = MegatronLengthGroupSampler(
+                len(dataset), 0, micro_bs, rank, dp_size, lengths=dataset.lengths)
         batch_collator = BatchCollector()
         dataloader = DataLoader(dataset,
                                 batch_sampler=batch_sampler,
@@ -505,15 +519,17 @@ def get_pad_dist_ratio(dataset, sampler_type='random', dp_size=16, micro_bs=4):
     print('dist ratio vit', vit_dist_ratio)
     return pad_ratio, vit_dist_ratio, llm_dist_ratio
 
+
 def get_init_llm_vit_len(json_files):
     o_dataset = BalancedDataset(json_files=json_files, init=False)
     o_vit_bs_mean = o_dataset.origin_info['vit_length_mean']
     o_llm_len_mean = o_dataset.origin_info['llm_length_mean']
-    init_ave_bs_llm_len = ((o_llm_len_mean // o_vit_bs_mean + 1) // 16) *  16
+    init_ave_bs_llm_len = ((o_llm_len_mean // o_vit_bs_mean + 1) // 16) * 16
 
     init_llm_len = 4096
     init_vit_bs = init_llm_len // init_ave_bs_llm_len
     return init_vit_bs, init_llm_len, init_ave_bs_llm_len
+
 
 if __name__ == "__main__":
 
@@ -531,14 +547,17 @@ if __name__ == "__main__":
         print(vit_bs, llm_len)
         threshs = [llm_len - 128]
         for thresh in threshs:
-            balanced_dataset = BalancedDataset(json_files, llm_len, thresh, itertime, vit_bs, fast_group=False)
+            balanced_dataset = BalancedDataset(
+                json_files, llm_len, thresh, itertime, vit_bs, fast_group=False)
             ave_bs = balanced_dataset.info_dict['ave_bs']
             max_ave_bs = max(ave_bs, max_ave_bs)
-            pad_r, v_dist_r, l_dist_r = get_pad_dist_ratio(balanced_dataset, sampler_type='random', dp_size=dp_size, micro_bs=1)
+            pad_r, v_dist_r, l_dist_r = get_pad_dist_ratio(
+                balanced_dataset, sampler_type='random', dp_size=dp_size, micro_bs=1)
             if sum([pad_r, v_dist_r, l_dist_r]) < best_r:
                 best_r = sum([pad_r, v_dist_r, l_dist_r])
             if ave_bs >= micro_bs and ave_bs <= micro_bs + 1:
-                result_list.append((sum([pad_r, v_dist_r, l_dist_r]), v_dist_r, l_dist_r, vit_bs, llm_len, thresh, ave_bs))
+                result_list.append(
+                    (sum([pad_r, v_dist_r, l_dist_r]), v_dist_r, l_dist_r, vit_bs, llm_len, thresh, ave_bs))
         if max_ave_bs > micro_bs + 1:
             if len(result_list) > 0:
                 break
@@ -550,5 +569,3 @@ if __name__ == "__main__":
             llm_len += step * init_ave_bs_llm_len
     print("ratio, v_dist_ratio, l_dist_ratio, vit_bs, llm_len, llm_thresh, ave_bs")
     print(sorted(result_list))
-
-    
