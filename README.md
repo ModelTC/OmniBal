@@ -1,7 +1,7 @@
 ## OmniBal
 
-Balanced Dynamic Mini-Batch for
-**OmniBal: Towards Fast Instruct-tuning for Vision-Language Models via  Omniverse Computation Balance**
+Balanced Dynamic Mini-Batch for our paper
+**[OmniBal: Towards Fast Instruct-tuning for Vision-Language Models via  Omniverse Computation Balance](https://arxiv.org/abs/2407.20761)**
 
 ### How to Run ISF
 
@@ -50,7 +50,7 @@ python balanced_dynamic_batch.py
 
 ```
 cd fast_isf
-sh build.sh
+sh build.sh && cd ..
 python balanced_dynamic_batch.py
 ```
 
