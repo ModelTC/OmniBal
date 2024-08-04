@@ -1,16 +1,18 @@
 ## OmniBal
 
+![framework](./images/framework.png)
 Balanced Dynamic Mini-Batch for our paper
 **[OmniBal: Towards Fast Instruct-tuning for Vision-Language Models via  Omniverse Computation Balance](https://arxiv.org/abs/2407.20761)**
 
 ### How to Run ISF
+![ISF](./images/data_group.png)
 
 #### Prepare dataset length
 
 We need to calculate offline statistics for all data, including the number of images and the token number of text.
 
 We have already prepared the internvl-1.2M length information and placed it in the dataset.
-
+test_balanced_dynamic_batch.py
 
 #### Data Input
 
