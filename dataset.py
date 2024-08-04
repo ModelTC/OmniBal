@@ -340,34 +340,34 @@ class BalancedDataset(Dataset):
         return info_dict
 
     def __getitem__(self, idx):
-        # if self.sp_num > 1:
-        #     sp_groups = self.sp_groups[idx]
-        #     sp_out = []
-        #     for groups in sp_groups:
-        #         vit_num = 0
-        #         llm_num = 0
-        #         for item in groups:
-        #             vit_num += item[1]
-        #             llm_num += item[2]
-        #         sp_out.append((llm_num, vit_num))
-        #     return sp_out
-        # else:
-        groups = self.pack_group[idx]
-        vit_num = 0
-        llm_num = 0
-        for item in groups:
-            vit_num += item[1]
-            llm_num += item[2]
-        return (llm_num, vit_num)
+        if self.sp_num > 1:
+            sp_groups = self.sp_groups[idx]
+            sp_out = []
+            for groups in sp_groups:
+                vit_num = 0
+                llm_num = 0
+                for item in groups:
+                    vit_num += item[1]
+                    llm_num += item[2]
+                sp_out.append((vit_num, llm_num))
+            return sp_out
+        else:
+            groups = self.pack_group[idx]
+            vit_num = 0
+            llm_num = 0
+            for item in groups:
+                vit_num += item[1]
+                llm_num += item[2]
+        return [(vit_num, llm_num)]
 
     def __len__(self):
         """
         Returns dataset length
         """
-        # if self.sp_num > 1:
-        #     return len(self.sp_groups)
-        # else:
-        return len(self.pack_group)
+        if self.sp_num > 1:
+            return len(self.sp_groups)
+        else:
+            return len(self.pack_group)
 
 
 class BaseDataset(Dataset):

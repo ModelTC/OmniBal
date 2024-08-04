@@ -17,8 +17,30 @@ class BatchCollector(object):
         vit = []
         llm = []
         for instance in instances:
-            vit.append(instance[1])
-            llm.append(instance[0])
+            if len(instance) == 1:
+                vit.append(instance[0][0])
+                llm.append(instance[0][1])
+            else:
+                temp = []
+                for sp_instance in instance:
+                    temp.append(sp_instance[1])
+                max_llm = max(temp)
+                sp_llm = []
+                sp_vit = []
+                # pad for llm
+                for sp_instance in instance:
+                    if sp_instance[1] < max_llm:
+                        sp_llm.append(max_llm)
+                    else:
+                        sp_llm.append(sp_instance[1])
+                    # sp vit num = 1, fake vit num = 1
+                    if sp_instance[0] == 0:
+                        sp_vit.append(1)
+                    else:
+                        sp_vit.append(sp_instance[0])
+                vit.append(sum(sp_vit))
+                llm.append(sum(sp_llm))
+
         max_length = max(llm)
         pad_list = []
         seq_len = []
@@ -147,7 +169,7 @@ def search_arguments(json_files, dp_size=8, itertime=50, micro_bs=4, multi_group
     return result_list[0][3:6]
 
 
-def test_for_vlm(multi_group=False, vit_bs=None, llm_len=None, thresh=None):
+def test_for_vlm(multi_group=False, vit_bs=None, llm_len=None, thresh=None, sp_num=1, sampler='random'):
     json_files = ['./internvl_sft_1.2M.json']
     dp_size = 8
     itertime = 50
@@ -155,10 +177,10 @@ def test_for_vlm(multi_group=False, vit_bs=None, llm_len=None, thresh=None):
     if vit_bs is None:
         vit_bs, llm_len, thresh = search_arguments(json_files, dp_size, itertime, micro_bs)
     balanced_dataset = BalancedDataset(
-        json_files, llm_len, thresh, itertime, vit_bs, fast_group=False, multi_group=multi_group)
+        json_files, llm_len, thresh, itertime, vit_bs, fast_group=False, multi_group=multi_group, sp_num=sp_num)
     ave_bs = balanced_dataset.info_dict['ave_bs']
     pad_r, v_dist_r, l_dist_r = get_pad_dist_ratio(
-        balanced_dataset, sampler_type='random', dp_size=dp_size, micro_bs=1)
+        balanced_dataset, sampler_type=sampler, dp_size=dp_size, micro_bs=1)
     print(pad_r, v_dist_r, l_dist_r, ave_bs)
 
 
@@ -220,3 +242,7 @@ if __name__ == "__main__":
     # test for vlm + llm with search arguments , with multi group
     logging.info("test for vlm + llm with fix arguments, with multi group")
     test_for_vlm_llm(multi_group=True, vit_bs=[9, 9], llm_len=[4096, 4096], thresh=[3968, 3968])
+
+    # test with sp
+    logging.info("test for vlm for sp")
+    test_for_vlm(vit_bs=9, llm_len=4096, thresh=3968, sp_num=4, sampler='group_random')
