@@ -43,7 +43,7 @@ The "Token_length" information consists of a list in this data format. "vit_num"
 #### Get ISF arguments (vit bs num and llm token length)
 
 ```python
-python balanced_dynamic_batch.py
+python test_balanced_dynamic_batch.py
 ```
 
 *if you want to use fast version*
@@ -51,7 +51,7 @@ python balanced_dynamic_batch.py
 ```
 cd fast_isf
 sh build.sh && cd ..
-python balanced_dynamic_batch.py
+python test_balanced_dynamic_batch.py
 ```
 
 #### Replace your dataset

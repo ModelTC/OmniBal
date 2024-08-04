@@ -1,29 +1,29 @@
 {
     "ai2d_train_12k_wh": {
-        "token_lengths": "./dataset/vision/ai2d_train_12k_wh_token_lengths.json"
+        "token_lengths": "./data/vision/ai2d_train_12k_wh_token_lengths.json"
     },
     "docvqa_train_10k_wh": {
-        "token_lengths": "./dataset/vision/docvqa_train_10k_wh_token_lengths.json"
+        "token_lengths": "./data/vision/docvqa_train_10k_wh_token_lengths.json"
     },
     "chartqa_train_18k_wh": {
-        "token_lengths": "./dataset/vision/chartqa_train_18k_wh_token_lengths.json"
+        "token_lengths": "./data/vision/chartqa_train_18k_wh_token_lengths.json"
     },
     "dvqa_train_200k_wh": {
-        "token_lengths": "./dataset/vision/dvqa_train_200k_wh_token_lengths.json"
+        "token_lengths": "./data/vision/dvqa_train_200k_wh_token_lengths.json"
     },
     "geoqa+_wh": {
-        "token_lengths": "./dataset/vision/geoqa+_wh_token_lengths.json"
+        "token_lengths": "./data/vision/geoqa+_wh_token_lengths.json"
     },
     "llava_instruct_150k_zh_wh": {
-        "token_lengths": "./dataset/vision/llava_instruct_150k_zh_wh_token_lengths.json"
+        "token_lengths": "./data/vision/llava_instruct_150k_zh_wh_token_lengths.json"
     },
     "sharegpt4v_instruct_gpt4-vision_cap100k_clean_wh": {
-        "token_lengths": "./dataset/vision/sharegpt4v_instruct_gpt4-vision_cap100k_clean_wh_token_lengths.json"
+        "token_lengths": "./data/vision/sharegpt4v_instruct_gpt4-vision_cap100k_clean_wh_token_lengths.json"
     },
     "sharegpt4v_mix665k_cap23k_coco-ap9k_lcs3k_sam9k_div2k_clean_wh": {
-        "token_lengths": "./dataset/vision/sharegpt4v_mix665k_cap23k_coco-ap9k_lcs3k_sam9k_div2k_clean_wh_token_lengths.json"
+        "token_lengths": "./data/vision/sharegpt4v_mix665k_cap23k_coco-ap9k_lcs3k_sam9k_div2k_clean_wh_token_lengths.json"
     },
     "synthdog_en_wh": {
-        "token_lengths": "./dataset/vision/synthdog_en_wh_token_lengths.json"
+        "token_lengths": "./data/vision/synthdog_en_wh_token_lengths.json"
     }
 }

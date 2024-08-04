@@ -1,5 +1,5 @@
 {
     "llm_example": {
-        "token_lengths": "./dataset/llm/llm_train_example.json"
+        "token_lengths": "./data/llm/llm_train_example.json"
     }
 }
