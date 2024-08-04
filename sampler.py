@@ -195,7 +195,8 @@ class GroupRandomBatchSamper:
                  micro_batch_size,
                  data_parallel_rank,
                  data_parallel_size,
-                 lengths=None):
+                 lengths=None,
+                 bin_size=512):
         if isinstance(total_samples, list):
             self.total_samples_list = total_samples
             self.total_samples = sum(self.total_samples_list)
@@ -211,6 +212,7 @@ class GroupRandomBatchSamper:
         self.consumed_iter = self.consumed_samples // self.micro_batch_times_data_parallel_size
         self.epoch = 0
         self.text_lengths = lengths
+        self.bin_size = bin_size
 
         assert self.micro_batch_size > 0
         assert data_parallel_size > 0
@@ -219,7 +221,7 @@ class GroupRandomBatchSamper:
             '{}'.format(self.data_parallel_rank, data_parallel_size)
         self.generate_indices()
         self.indices = self.indices[self.consumed_samples:]
-        self.build_balanced_indices()
+        self.indices = self.build_balanced_indices()
 
     def build_balanced_indices(self):
         bin_size_group = self.build_bin_size_group()
@@ -231,7 +233,7 @@ class GroupRandomBatchSamper:
 
     def build_bin_size_group(self):
         bin_size_group = {}
-        bin_size = 64
+        bin_size = self.bin_size
         for idx in self.indices:
             length = self.text_lengths[idx]
             if (length // bin_size) not in bin_size_group:

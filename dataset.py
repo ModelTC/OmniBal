@@ -1,6 +1,7 @@
 import json
 from torch.utils.data import Dataset
 import numpy as np
+import math
 
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,6 +21,72 @@ def get_vit_num(g):
     return vit_num
 
 
+def get_sp_groups(pack_group, sp_num):
+
+    # padding to sp_num
+    align_length = int(math.ceil(len(pack_group) * 1.0 / sp_num)) * sp_num
+    padding_size = align_length - len(pack_group)
+    if padding_size <= len(pack_group):
+        pack_group += pack_group[:padding_size]
+    else:
+        pack_group += (pack_group * math.ceil(padding_size / len(pack_group)))[:padding_size]
+
+    lengths = []
+    for idx, g in enumerate(pack_group):
+        temp = 0
+        for item in g:
+            temp += item[2]
+        lengths.append((temp , idx))
+    lengths = sorted(lengths)
+
+    sp_groups = []
+    target_len = align_length // sp_num
+    for i in range(target_len):
+        temp = []
+        for j in range(sp_num):
+            g_idx = lengths[i * sp_num + j][1]
+            temp.append(pack_group[g_idx])
+        sp_groups.append(temp)
+    return sp_groups
+
+
+def get_sp_dist_pad_ratio(sp_groups):
+    sp_vit_dist_ratio = []
+    sp_llm_dist_ratio = []
+    act_token = 0
+    all_token = 0
+    pad_token = 0
+    sp_num = len(sp_groups[0])
+    for groups in sp_groups:
+        vit_bs = []
+        llm_len = []
+        for g in groups:
+            vit_bs_sum = 0
+            llm_len_sum = 0
+            for item in g:
+                vit_bs_sum += item[1]
+                llm_len_sum += item[2]
+            vit_bs.append(vit_bs_sum)
+            llm_len.append(llm_len_sum)
+        max_vit_bs = max(vit_bs)
+        max_llm_len = max(llm_len)
+        all_token += (max_llm_len * sp_num)
+        for item in vit_bs:
+            waste_vit_ratio = (max_vit_bs - item) / max(max_vit_bs, 1)
+            sp_vit_dist_ratio.append(waste_vit_ratio)
+        for item in llm_len:
+            waste_llm_ratio = (max_llm_len - item) / max(max_llm_len, 1)
+            pad_token += (max_llm_len - item)
+            act_token += item
+            sp_llm_dist_ratio.append(waste_llm_ratio)
+    ave_sp_vit_dist_ratio = np.mean(sp_vit_dist_ratio)
+    ave_sp_llm_dist_ratio = np.mean(sp_llm_dist_ratio)
+    ave_sp_llm_pad_ratio = pad_token / all_token
+    print(f"ave_sp_vit_dist_ratio: {ave_sp_vit_dist_ratio}")
+    print(f"ave_sp_llm_dist_ratio: {ave_sp_llm_dist_ratio}")
+    print(f"ave_sp_llm_pad_ratio: {ave_sp_llm_pad_ratio}")
+
+
 class BalancedDataset(Dataset):
     def __init__(self,
                  json_files,
@@ -31,7 +98,8 @@ class BalancedDataset(Dataset):
                  fast_group=False,
                  vit_packed_thresh=None,
                  seed=1024,
-                 multi_group=False):
+                 multi_group=False,
+                 sp_num=1):
         super(BalancedDataset, self).__init__()
         if vit_packed_thresh is None:
             vit_packed_thresh = vit_packed_length
@@ -45,6 +113,8 @@ class BalancedDataset(Dataset):
         self.iter_time = self._convert2list(iter_time)
         self.pack_group = []
         self.group_lengths = []
+        self.sp_num = sp_num
+        self.sp_groups = []
 
         if init:
             for idx, token_lengths in enumerate(self.token_lengths_list):
@@ -66,16 +136,35 @@ class BalancedDataset(Dataset):
                                                          self.llm_thresh[idx],
                                                          self.llm_packed_length[idx],
                                                          iter_time=self.iter_time[idx])
+                if self.sp_num > 1:
+                    self.sp_groups.extend(get_sp_groups(pack_group, self.sp_num))
+                    e_pack_group = []
+                    for item in self.sp_groups:
+                        temp = []
+                        for j in item:
+                            temp.extend(j)
+                        e_pack_group.append(temp)
+                    pack_group = e_pack_group
                 self.group_lengths.append(len(pack_group))
                 self.pack_group.extend(pack_group)
+            if self.sp_num > 1:
+                get_sp_dist_pad_ratio(self.sp_groups)
             print(json.dumps(self.collect_packed_info(self.pack_group), indent=4, sort_keys=True))
 
             lengths = []
-            for g in self.pack_group:
-                temp = 0
-                for item in g:
-                    temp += item[2]
-                lengths.append(temp)
+            if self.sp_num > 1:
+                for sp_g in self.sp_groups:
+                    temp = 0
+                    for g in sp_g:
+                        for item in g:
+                            temp += item[2]
+                    lengths.append(temp)
+            else:
+                for g in self.pack_group:
+                    temp = 0
+                    for item in g:
+                        temp += item[2]
+                    lengths.append(temp)
             self.lengths = lengths
 
     def _convert2list(self, item):
@@ -251,6 +340,18 @@ class BalancedDataset(Dataset):
         return info_dict
 
     def __getitem__(self, idx):
+        # if self.sp_num > 1:
+        #     sp_groups = self.sp_groups[idx]
+        #     sp_out = []
+        #     for groups in sp_groups:
+        #         vit_num = 0
+        #         llm_num = 0
+        #         for item in groups:
+        #             vit_num += item[1]
+        #             llm_num += item[2]
+        #         sp_out.append((llm_num, vit_num))
+        #     return sp_out
+        # else:
         groups = self.pack_group[idx]
         vit_num = 0
         llm_num = 0
@@ -263,6 +364,9 @@ class BalancedDataset(Dataset):
         """
         Returns dataset length
         """
+        # if self.sp_num > 1:
+        #     return len(self.sp_groups)
+        # else:
         return len(self.pack_group)
 
 
