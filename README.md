@@ -77,6 +77,35 @@ The example implementation we provided is based on a fake dataset. For actual us
 
 
 
+### Citation
+If you find this repository helpful, please cite the paper below.
+
+```bibtex
+@article{yao2024omnibal,
+  title={OmniBal: Towards Fast Instruct-tuning for Vision-Language Models via Omniverse Computation Balance},
+  author={Yao, Yongqiang and Tan, Jingru and Hu, Jiahao and Zhang, Feizhao and Jin, Xin and Li, Bo and Gong, Ruihao and Liu, Pengfei},
+  journal={arXiv e-prints},
+  pages={arXiv--2407},
+  year={2024}
+}
+```
+
+### License
+This project utilizes certain datasets and checkpoints that are subject to their respective original licenses. Users must comply with all terms and conditions of these original licenses.
+The content of this project itself is licensed under the [Apache license 2.0](./LICENSE).
+
+## Acknowledgement
+
+We build our project based on:
+- [InternVL](https://github.com/OpenGVLab/InternVL)
+- [LLaVA](https://github.com/haotian-liu/LLaVA)
+- [DeepSpeed](https://github.com/microsoft/DeepSpeed.git)
+- [Megatron-DeepSpeed](https://github.com/microsoft/Megatron-DeepSpeed.git)
+- [Megatron-LM](https://github.com/NVIDIA/Megatron-LM.git)
+- [Flash Attention 1&2](https://github.com/Dao-AILab/flash-attention)
+- [LightLLM](https://github.com/ModelTC/lightllm)
+- [Huggingface Transformers](https://github.com/huggingface/transformers.git)
+
 
 
 
