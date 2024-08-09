@@ -4,6 +4,17 @@
 Balanced Dynamic Mini-Batch for our paper
 **[OmniBal: Towards Fast Instruct-tuning for Vision-Language Models via  Omniverse Computation Balance](https://arxiv.org/abs/2407.20761)**
 
+### InterVL Code Example
+
+[InternVL-Chat-V1.5](https://github.com/ModelTC/InternVL/tree/OmniBal_V1.5)
+[InternVL-Chat-V2.0](https://github.com/ModelTC/InternVL/tree/OmniBal_V2.0)
+
+TODO
+- [x] Add InternVL Example
+- [ ] Add InternVL Train Readme Example
+- [ ] Add XTuner Example
+- [ ] Add LLava Example
+
 ### How to Run ISF
 ![ISF](./images/data_group.png)
 
