@@ -7,6 +7,7 @@ Balanced Dynamic Mini-Batch for our paper
 ### InterVL Code Example
 
 [InternVL-Chat-V1.5](https://github.com/ModelTC/InternVL/tree/OmniBal_V1.5)
+
 [InternVL-Chat-V2.0](https://github.com/ModelTC/InternVL/tree/OmniBal_V2.0)
 
 TODO
