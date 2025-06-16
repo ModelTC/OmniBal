@@ -1,32 +1,60 @@
-## OmniBal
+# OmniBal: Towards Fast Instruction-Tuning for Vision-Language Models via Omniverse Computation Balance
 
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![arXiv](https://img.shields.io/badge/OmniBal-2407.20761-b31b1b)](https://arxiv.org/abs/2407.20761)
+[![GitHub Stars](https://img.shields.io/github/stars/ModelTC/OmniBal.svg?style=social&label=Star&maxAge=60)](https://github.com/ModelTC/OmniBal)
+
+
+[Yongqiang Yao*](https://github.com/yqyao), [Jingru Tan*](https://github.com/tztztztztz), [Feizhao Zhang*](), [Jiahao Hu](https://github.com/LitPrice), [Yazhe Niu](https://github.com/PaParaZz1), [Xin Jin](), [Bo Li](https://github.com/waveboo), [Pengfei Liu](https://scholar.google.com/citations?user=oIz_CYEAAAAJ&hl=en), [Ruihao Gong📧](https://xhplus.github.io/), [Dahua Lin](https://scholar.google.com/citations?user=GMzzRRUAAAAJ&hl=en) , [Ningyi Xu📧](http://www.qingyuan.sjtu.edu.cn/a/xu-ning-yi-1.html)
+(* denotes equal contribution, 📧 denotes corresponding author.)
+
+This is the official implementation of our paper **[OmniBal](https://arxiv.org/abs/2407.20761)**, an omniverse balanced training framework for large-scale 3D parallel training of vision-language models.  
+End-to-end experiments on open-source VLMs show a **1.8x** training speed-up, and the method is model-, dataset-, and hardware-agnostic ready to plug into existing training pipelines with minimal changes.
+
+## News
+**May 1, 2025**: 🌟 Our paper has been accepted by ICML 2025! 🎉 Cheers!
+
+## Overview
+
+Large-scale vision-language instruction tuning often suffers from severe load imbalance across GPUs because the vision and language branches differ drastically in data distribution and network structure. **OmniBal** rebalances computation from three tightly coupled angles:
+
+* **Data:** regrouping samples into mini-batches that equalize per-GPU FLOPs.
+* **Model:** a search-based partitioner that assigns vision and language layers to devices for near-uniform workload.
+* **Memory:** adaptive, per-partition re-compute policies that squeeze the most out of available memory without stalling kernels.
+
+Together, these modules form an “omniverse” training framework that delivers **\~1.8 × end-to-end speed-up** on InternVL-Chat and consistently accelerates other VL models and datasets – all while maintaining accuracy.
+
+
+### Framework
 ![framework](./images/framework.png)
-Balanced Dynamic Mini-Batch for our paper
-**[OmniBal: Towards Fast Instruct-tuning for Vision-Language Models via  Omniverse Computation Balance](https://arxiv.org/abs/2407.20761)**
 
-### InterVL Code Example
 
-[InternVL-Chat-V1.5](https://github.com/ModelTC/InternVL/tree/OmniBal_V1.5)
+### Imbalance Problem In VLM
 
-[InternVL-Chat-V2.0](https://github.com/ModelTC/InternVL/tree/OmniBal_V2.0)
+![Prblem](./images/problem.png)
 
-TODO
-- [x] Add InternVL Example
-- [ ] Add InternVL Train Readme Example
-- [ ] Add XTuner Example
-- [ ] Add LLava Example
+* **Inter-Stage**: computation imbalance of different pipeline parallel stages. 
+* **Intra-Stage**: indicates the computation imbalance of the same stage across time and devices. 
 
-### How to Run ISF
-![ISF](./images/data_group.png)
 
-#### Prepare dataset length
+
+## Balanced Dynamic Mini-Batch
+
+* ISF Algorithm
+![ISF](./images/isf.png)
+
+* Example
+![example](./images/data_group.png)
+
+
+### Prepare dataset length
 
 We need to calculate offline statistics for all data, including the number of images and the token number of text.
 
 We have already prepared the internvl-1.2M length information and placed it in the dataset.
 test_balanced_dynamic_batch.py
 
-#### Data Input
+### Data Input
 
 "internvl_sft_1.2M.json" is our simulated input, containing actual real statistical lengths.
 
@@ -54,7 +82,7 @@ The "Token_length" information consists of a list in this data format. "vit_num"
 
 ```
 
-#### Get ISF arguments (vit bs num and llm token length)
+### Get ISF arguments (vit bs num and llm token length)
 
 ```python
 python test_balanced_dynamic_batch.py
@@ -68,22 +96,32 @@ sh build.sh && cd ..
 python test_balanced_dynamic_batch.py
 ```
 
-#### Replace your dataset
+### Replace your dataset
 
 The example implementation we provided is based on a fake dataset. For actual use, you need to replace it with your own dataset.
 
+## Code
+
+### Data Example
+
+[InternVL-Chat-V1.5](https://github.com/ModelTC/InternVL/tree/OmniBal_V1.5)
+
+[InternVL-Chat-V2.0](https://github.com/ModelTC/InternVL/tree/OmniBal_V2.0)
+
+[Xtuner-example](https://github.com/InternLM/xtuner/pull/906)
+
 ### Full Code
 
-[Example](https://github.com/ModelTC/EasyLLM)
+[Example](https://github.com/ModelTC/EasyLLM/tree/fast_vlm_dc_0713_paper)
 
 
 
-### Citation
+## Citation
 If you find this repository helpful, please cite the paper below.
 
 ```bibtex
 @article{yao2024omnibal,
-  title={OmniBal: Towards Fast Instruct-tuning for Vision-Language Models via Omniverse Computation Balance},
+  title={OmniBal: Towards Fast Instruction-tuning for Vision-Language Models via Omniverse Computation Balance},
   author={Yao, Yongqiang and Tan, Jingru and Hu, Jiahao and Zhang, Feizhao and Jin, Xin and Li, Bo and Gong, Ruihao and Liu, Pengfei},
   journal={arXiv e-prints},
   pages={arXiv--2407},
@@ -91,7 +129,7 @@ If you find this repository helpful, please cite the paper below.
 }
 ```
 
-### License
+## License
 This project utilizes certain datasets and checkpoints that are subject to their respective original licenses. Users must comply with all terms and conditions of these original licenses.
 The content of this project itself is licensed under the [Apache license 2.0](./LICENSE).
 
